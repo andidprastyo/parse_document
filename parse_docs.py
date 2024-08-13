@@ -1,17 +1,16 @@
 import os
-import uuid
 import fitz
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-def pdf_to_json(filename):
+def pdf_to_json(filename, doc_id):
     """
     Parses a PDF file and converts it into JSON format.
     
     :param filename: Path to the PDF file
+    :param doc_id: The ID to assign to the document
     :return: JSON representation of the PDF
     """
-    doc_id = str(uuid.uuid4())
     pdf_document = fitz.open(filename)
     pdf_json = {
         'id': doc_id,
@@ -52,10 +51,11 @@ if __name__ == "__main__":
     db_name = os.getenv('DB_NAME')
     collection_name = os.getenv('COLLECTION_NAME')
 
-    for filename in os.listdir(directory_path):
+    for index, filename in enumerate(os.listdir(directory_path), start=1):
         if filename.endswith('.pdf'):
             pdf_path = os.path.join(directory_path, filename)
-            pdf_json = pdf_to_json(pdf_path)
+            doc_id = f"doc_{index}"
+            pdf_json = pdf_to_json(pdf_path, doc_id)
             # Store JSON in MongoDB
             store_in_mongodb(pdf_json, db_name, collection_name, mongo_url)
-            print(f"PDF {filename} parsed and stored in MongoDB successfully.")
+            print(f"PDF {filename} parsed and stored in MongoDB successfully with ID {doc_id}.")
